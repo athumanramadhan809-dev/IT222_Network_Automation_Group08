@@ -131,26 +131,32 @@ Student-PC1 - Student endpoint at Site A
 Teacher-PC1 - Teacher endpoint at Site A
 Student-PC2 - Student endpoint at Site B
 Teacher-PC2 - Teacher endpoint at Site B
-6. VLAN Design
+
+
+# 6. VLAN Design
 
 Two VLANs are used to separate Student and Teacher functions.
 
-VLAN ID	VLAN Name	Function
-70	Students	Student computers
-80	Teachers	Teacher computers
+VLAN ID	VLAN Name	         Function
+70	      Students	         Student computers
+80	      Teachers	         Teacher computers
 
 The Student and Teacher VLANs are maintained at both academic
 blocks.
 
-7. IP Addressing Plan
+#  7. IP Addressing Plan
+
 Site A
-Function	VLAN	Network	Gateway	Host
+Function	VLAN	Network	      Gateway	     Host
 Students	70	10.70.1.0/24	10.70.1.1	10.70.1.10
 Teachers	80	10.80.1.0/24	10.80.1.1	10.80.1.10
+
 Site B
-Function	VLAN	Network	Gateway	Host
+Function	VLAN	Network	       Gateway	   Host
 Students	70	10.70.2.0/24	10.70.2.1	10.70.2.10
 Teachers	80	10.80.2.0/24	10.80.2.1	10.80.2.10
+
+
 R1-R2 Routed Link
 Link	Network
 R1-R2	10.8.8.0/30
@@ -158,24 +164,26 @@ R1-R2	10.8.8.0/30
 The /30 network provides the point-to-point routed connection between
 R1 and R2.
 
-8. Interface and Port Assignment
+# 8. Interface and Port Assignment
 
 The assignment specifies the following interface roles:
 
-Device	Interface	Function
-R1	Gi0/1	Trunk toward SW1
-R2	Gi0/1	Trunk toward SW2
-SW1	Gi0/1	Trunk toward R1
-SW2	Gi0/1	Trunk toward R2
-SW1	Gi0/2	Students VLAN 70
-SW1	Gi0/3	Teachers VLAN 80
-SW2	Gi0/2	Students VLAN 70
-SW2	Gi0/3	Teachers VLAN 80
+Device	Interface	      Function
+R1	      Gi0/1	            Trunk toward SW1
+R2	      Gi0/1	            Trunk toward SW2
+SW1	      Gi0/1       	Trunk toward R1
+SW2	      Gi0/1	            Trunk toward R2
+SW1	      Gi0/2	            Students VLAN 70
+SW1	      Gi0/3	            Teachers VLAN 80
+SW2	      Gi0/2	            Students VLAN 70
+SW2	      Gi0/3	            Teachers VLAN 80
 
 The Gi0/1 router-to-switch links carry the required VLAN traffic
 between the switches and routers.
 
-9. Routing Method
+
+
+# 9. Routing Method
 OSPF
 
 The network uses Open Shortest Path First (OSPF) as the dynamic
@@ -188,6 +196,9 @@ The OSPF configuration is designed to allow the routers to learn
 the remote Student and Teacher networks dynamically.
 
 The R1-R2 routed link is used as the OSPF adjacency path.
+
+
+
 
 10. Router-on-a-Stick Design
 
@@ -215,7 +226,10 @@ R2
  +-- Gi0/1.70 ---- VLAN 70 Students
  |
  +-- Gi0/1.80 ---- VLAN 80 Teachers
-11. Scenario Requirements Analysis
+
+
+
+# 11. Scenario Requirements Analysis
 Requirement	Configuration Used	Verification	Operational Test
 Separate Students and Teachers	VLAN 70 and VLAN 80	show vlan brief	Verify devices are assigned to correct VLANs
 Connect Site A and Site B	R1-R2 routed link	show ip interface brief	Ping R1 to R2
@@ -226,7 +240,11 @@ Exchange remote routes	OSPF	show ip ospf neighbor	Verify OSPF adjacency
 Learn remote networks	OSPF	show ip route ospf	Verify remote VLAN routes
 Student communication between sites	Routing + VLAN configuration	Routing table and ping	Student Site A → Student Site B
 Teacher communication between sites	Routing + VLAN configuration	Routing table and ping	Teacher Site A → Teacher Site B
-12. Python Automation
+
+
+
+
+# 12. Python Automation
 
 Python automation is used to configure, verify, and test the network
 devices.
@@ -243,7 +261,8 @@ Testing
 
 Each network device has scenario-specific scripts.
 
-13. Configuration Scripts
+
+# 13. Configuration Scripts
 
 The Configuration_Scripts/ directory contains the completed
 scenario-specific Python scripts.
@@ -321,6 +340,38 @@ Remote Teacher networks are learned.
 
 The network_test.py script performs scenario-based end-to-end
 connectivity tests.
+
+/*************Point to Remember****************************/
+
+Inorder to confirm ping from student PCs and Teacher PCs to another end-devices you must first confirgure it. Since we are used Firefox docker as client devices, open it and open terminal inside Firefox docker and then enter the followings commands to provides ip address on a device manually.
+   For Student-PC on site A
+   *********************************
+     sudo ip addr add 10.70.1.10/24 dev eth0
+     sudo ip link set eth0 up
+     sudo ip route add default via 10.70.1.1
+  ***********************************
+     For Teacher-PC on site A
+   *********************************
+     sudo ip addr add 10.80.1.10/24 dev eth0
+     sudo ip link set eth0 up
+     sudo ip route add default via 10.80.1.1
+  ***********************************
+     For Student-PC on site B
+   *********************************
+     sudo ip addr add 10.70.2.10/24 dev eth0
+     sudo ip link set eth0 up
+     sudo ip route add default via 10.70.2.1
+  ***********************************
+     For Student-PC on siteA
+   *********************************
+     sudo ip addr add 10.80.2.10/24 dev eth0
+     sudo ip link set eth0 up
+     sudo ip route add default via 10.80.2.1
+  ***********************************
+/***********This Above is important because end-host devices does not save ip address like routers and swtches, so before Ping Tests need to confirgure it first************************/
+
+
+
 
 Test 1 - Student Site A to Student Site B
 Source:
@@ -478,59 +529,8 @@ Student and Teacher functions should remain logically separated
 through VLANs.
 
 
-17. Additional Security Enhancement / Future Improvement
-Stateful Student-Teacher Access Control
 
-As a future improvement, the network can be enhanced with a
-stateful access-control policy between the Student and Teacher VLANs.
-
-The proposed policy is:
-
-Source	Destination	Policy
-Student	Student	ALLOW
-Teacher	Teacher	ALLOW
-Student	Teacher	DENY
-Teacher	Student	ALLOW
-
-The policy is intended to prevent students from initiating
-connections toward Teacher networks while allowing authorized
-Teacher-initiated communication toward Student networks.
-
-Student-to-Student communication between the two academic blocks
-should remain available.
-
-Teacher-to-Teacher communication between the two academic blocks
-should also remain available.
-
-The implementation may use a stateful firewall/access-control
-mechanism supported by the selected Cisco IOS platform.
-
-This enhancement is documented as an additional feature and is
-separate from the core Assignment 8 connectivity requirements.
-
-# 18. Future Improvement Testing
-
-If the security enhancement is implemented, the following tests
-should be added.
-
-Source	Destination	Expected Result
-Student Site A	Student Site B	ALLOW
-Student Site B	Student Site A	ALLOW
-Teacher Site A	Teacher Site B	ALLOW
-Teacher Site B	Teacher Site A	ALLOW
-Student Site A	Teacher Site A	BLOCK
-Student Site A	Teacher Site B	BLOCK
-Student Site B	Teacher Site A	BLOCK
-Student Site B	Teacher Site B	BLOCK
-Teacher Site A	Student Site A	ALLOW
-Teacher Site A	Student Site B	ALLOW
-Teacher Site B	Student Site A	ALLOW
-Teacher Site B	Student Site B	ALLOW
-
-The security enhancement should only be considered complete when
-the intended allowed and denied behaviours have been verified.
-
-19. How to Run the Project
+17. How to Run the Project
 Step 1 - Open GNS3
 
 Open the GNS3 project located in:
@@ -604,7 +604,9 @@ The test results should demonstrate the required Student and Teacher
 communication between the two academic blocks and confirm OSPF
 operation.
 
-20. Repository Structure
+
+
+18. Repository Structure
 
 The project follows the required GitHub repository structure:
 
@@ -643,7 +645,7 @@ learning and reference.
 The completed scenario-specific work is maintained in
 Configuration_Scripts/.
 
-21. Assumptions
+19. Assumptions
 
 The following assumptions apply to this implementation:
 
